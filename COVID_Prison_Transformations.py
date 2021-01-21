@@ -28,8 +28,11 @@ max_ex = max(ndata_per_jail)
 threshold = .75*max_ex
 jails_to_include = ndata_per_jail[ndata_per_jail>=threshold].index
 
-df = df[df['STATE-COUNTY'].isin(jails_to_include)]
+df = df[df['STATE-COUNTY'].isin(jails_to_include)] #Subset to jails with 75% data populated compared to max number records for single facility
 over_75percent_data = len(df)
+
+march10_facilities = df[df.Scrape_Date == "2020-03-10"]['STATE-COUNTY'].unique()
+df = df[df['STATE-COUNTY'].isin(march10_facilities)] #Subset to jails with data for March 10th 2020
 
 
 
@@ -40,6 +43,10 @@ percent = str(round(len(jails_to_include)/len(ndata_per_jail),2)*100)
 message = "{} of {} jails ({}%) have over 75% data populated post march 10th."
 print(message.format(len(jails_to_include),len(ndata_per_jail), percent))
 
+
+percentM10_AND_75 = str(round(len(march10_facilities)/len(ndata_per_jail),2)*100)
+message = "{} of {} jails ({}%) have over 75% data populated AND data for March 10th."
+print(message.format(len(march10_facilities),len(ndata_per_jail), percentM10_AND_75))
 
 ## Jails with the last date needs to be within 3 months
 
@@ -72,7 +79,8 @@ jail_totals['Seven_Day_Rolling_Average'] = jail_totals['Total_Jail_Population'].
 
 ## First Day Available of Each Month
 first_days = df.groupby(['STATE-COUNTY', 'Month', 'Year']).head(1)
-first_days['Scrape_Date'] = "FirstDay" + first_days['Month'] + "-" + first_days['Year']
+first_days = first_days.copy() ##Create copy to avoid warning since first_days is a slice of df
+first_days['Scrape_Date'] = "FirstDay" + first_days['Month'].astype(str) + "-" + first_days['Year'].astype(str)
 
 
 ## First Monday of Each Month
