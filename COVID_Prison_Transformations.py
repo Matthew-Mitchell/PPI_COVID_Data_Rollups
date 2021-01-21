@@ -23,12 +23,12 @@ print("{} post march 10th.".format(after_mar10/orig_len))
 
 
 
-ndata_per_jail = df.groupby('Facility_Identifier')['Population'].count()
+ndata_per_jail = df.groupby('STATE-COUNTY')['Population'].count()
 max_ex = max(ndata_per_jail)
 threshold = .75*max_ex
 jails_to_include = ndata_per_jail[ndata_per_jail>=threshold].index
 
-df = df[df['Facility_Identifier'].isin(jails_to_include)]
+df = df[df['STATE-COUNTY'].isin(jails_to_include)]
 over_75percent_data = len(df)
 
 
@@ -47,9 +47,9 @@ today = pd.to_datetime(datetime.datetime.now().strftime('%m-%d-%Y'))
 three_months_ago = today - datetime.timedelta(days = 90)
 
 
-jails_most_recent = df.groupby('Facility_Identifier')['Scrape_Date'].max()
+jails_most_recent = df.groupby('STATE-COUNTY')['Scrape_Date'].max()
 jails_to_include = jails_most_recent[jails_most_recent>=three_months_ago].index
-df = df[df['Facility_Identifier'].isin(jails_to_include)] #Subset master dataset
+df = df[df['STATE-COUNTY'].isin(jails_to_include)] #Subset master dataset
 
 
 ## Quantifying Drop Off Again: Generally have seen that all jails that have 75% of data populated also include data from within 3 months:
@@ -71,23 +71,23 @@ jail_totals['Seven_Day_Rolling_Average'] = jail_totals['Total_Jail_Population'].
 
 
 ## First Day Available of Each Month
-first_days = df.groupby(['Facility_Identifier', 'Month', 'Year']).head(1)
+first_days = df.groupby(['STATE-COUNTY', 'Month', 'Year']).head(1)
 first_days['Scrape_Date'] = "FirstDay" + first_days['Month'] + "-" + first_days['Year']
 
 
 ## First Monday of Each Month
 
 mondays = df[df.DayOfWeek=='Monday']
-first_mondays = mondays.groupby(['Facility_Identifier', 'Month', 'Year']).head(1)
+first_mondays = mondays.groupby(['STATE-COUNTY', 'Month', 'Year']).head(1)
 
 
-most_recent = df.groupby(['Facility_Identifier']).tail(1)
+most_recent = df.groupby(['STATE-COUNTY']).tail(1)
 
 
 ## Verify DataFrame Correctly Sorted by Facility/Date
-assert(all(df == df.sort_values(by=['Facility_Identifier', 'Scrape_Date'])))
+assert(all(df == df.sort_values(by=['STATE-COUNTY', 'Scrape_Date'])))
 ## Ensure there is one per Facility
-assert(len(most_recent) == df.Facility_Identifier.nunique())
+assert(len(most_recent) == df.STATE-COUNTY.nunique())
 
 
 ## March 10th
@@ -95,14 +95,14 @@ assert(len(most_recent) == df.Facility_Identifier.nunique())
 march_10 = df[df.Scrape_Date == pd.to_datetime("03-10-2020")]
 
 ## First Mondays Summary
-first_monday_summary = first_mondays.groupby(['Facility_Identifier', 'Month', 'Year']).head(1)
+first_monday_summary = first_mondays.groupby(['STATE-COUNTY', 'Month', 'Year']).head(1)
 first_monday_summary['Scrape_Date'] = "FirstMondayAvailable" + first_monday_summary['Month'] + "-" + first_monday_summary['Year']
 
 # Stitching Together the Final Summary
 pre_pivot = pd.concat([march_10, first_mondays, most_recent, first_monday_summary, first_days], ignore_index=True)
 # Remove Potential Duplicates (First Mondays and Most Recent could include duplicates)
-pre_pivot = pre_pivot.drop_duplicates(subset=['Facility_Identifier', 'Scrape_Date'])
-final = pre_pivot.pivot(index="Facility_Identifier", columns="Scrape_Date", values="Population")
+pre_pivot = pre_pivot.drop_duplicates(subset=['STATE-COUNTY', 'Scrape_Date'])
+final = pre_pivot.pivot(index="STATE-COUNTY", columns="Scrape_Date", values="Population")
 
 
 ## Save Transformed Output to Excel
