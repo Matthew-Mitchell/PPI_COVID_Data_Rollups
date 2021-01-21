@@ -87,7 +87,7 @@ most_recent = df.groupby(['STATE-COUNTY']).tail(1)
 ## Verify DataFrame Correctly Sorted by Facility/Date
 assert(all(df == df.sort_values(by=['STATE-COUNTY', 'Scrape_Date'])))
 ## Ensure there is one per Facility
-assert(len(most_recent) == df.STATE-COUNTY.nunique())
+# assert(len(most_recent) == df.STATE-COUNTY.nunique()) #Deprecated; would need to populate state/county by splitting new state-county field which is true by definition.
 
 
 ## March 10th
