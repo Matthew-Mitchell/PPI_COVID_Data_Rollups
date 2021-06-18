@@ -2,17 +2,53 @@ import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 import datetime
-
+import glob
+import numpy as np
 #Read in NYU Data
-df = pd.read_csv('https://raw.githubusercontent.com/publicsafetylab/public-psl-jdi-pops/master/data.csv')
+# df = pd.read_csv('https://raw.githubusercontent.com/publicsafetylab/public-psl-jdi-pops/master/data.csv')
+def custom_sort(jdi):
+    date = jdi.split("_")[-1].strip(".csv")
+    date = pd.to_datetime(date)
+    return date
+#Find all files of the form jdi_booking_stats_DATE.csv
+jdi_files = glob.glob("jdi_booking_stats_*.csv")
+jdi_files = sorted(jdi_files, key= custom_sort)
+cur_file = jdi_files[-1]
+print("Reading file: ", cur_file)
 
-
+df = pd.read_csv(cur_file)
+cols2drop = ['Unnamed: 0', 'population_zeroed', 'population_raw']
+df = df.drop(cols2drop, axis=1)
+print(df.columns)
+df.columns = ['Population', 'Scrape_Date', 'STATE-COUNTY']
+print(df.columns)
+print(df.head(2))
 orig_len = len(df)
 
 
 #Reformat Date Column to be Timestamp
 df['Scrape_Date'] = pd.to_datetime(df['Scrape_Date'])
 df = df[df['Scrape_Date'] >= pd.to_datetime("03-10-2020")]
+
+#Round the linearly interpolated data
+#Custome function for if there are blank values when attempting to round
+def roundORblank(pop):
+    try:
+        pop = round(pop)
+    except:
+        assert np.isnan(pop), "Error did not round and is not null!!"
+    return pop
+
+try:
+    df['Population'] = df.Population.apply(round) #Use built in rounding
+except:
+    print("""Found Missing Linear Interpolated Populations!!
+    Using Custom Function which will leave these values blank while rounding the rest.""")
+    missing = df[df.Population.isna()]
+    print("Number of missing Population Values since March 10th:", len(missing))
+    print("Preview of missing values:", missing)
+    df['Population'] = df.Population.apply(roundORblank)
+
 after_mar10 = len(df)
 
 
@@ -78,6 +114,9 @@ jail_totals['Seven_Day_Rolling_Average'] = jail_totals['Total_Jail_Population'].
 
 
 ## First Day Available of Each Month
+## Ensure Sorted from earliest to most recent
+df = df.sort_values(by=['STATE-COUNTY', 'Scrape_Date'])
+
 first_days = df.groupby(['STATE-COUNTY', 'Month', 'Year']).head(1)
 first_days = first_days.copy() ##Create copy to avoid warning since first_days is a slice of df
 first_days['Scrape_Date'] = "FirstDay" + first_days['Month'].astype(str) + "-" + first_days['Year'].astype(str)
@@ -93,6 +132,7 @@ most_recent = df.groupby(['STATE-COUNTY']).tail(1)
 
 
 ## Verify DataFrame Correctly Sorted by Facility/Date
+
 assert(all(df == df.sort_values(by=['STATE-COUNTY', 'Scrape_Date'])))
 ## Ensure there is one per Facility
 # assert(len(most_recent) == df.STATE-COUNTY.nunique()) #Deprecated; would need to populate state/county by splitting new state-county field which is true by definition.
