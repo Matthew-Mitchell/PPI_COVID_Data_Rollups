@@ -17,10 +17,17 @@ cur_file = jdi_files[-1]
 print("Reading file: ", cur_file)
 
 df = pd.read_csv(cur_file)
-cols2drop = ['Unnamed: 0', 'population_zeroed', 'population_raw']
-df = df.drop(cols2drop, axis=1)
+# cols2drop = ['Unnamed: 0', 'population_zeroed', 'population_raw']
+# df = df.drop(cols2drop, axis=1)
 print(df.columns)
-df.columns = ['Population', 'Scrape_Date', 'STATE-COUNTY']
+
+column_dictionary = {'Population' : 'Population',
+                     'Date':'Scrape_Date'}
+df = df.rename(columns = column_dictionary)
+df['STATE-COUNTY'] = df['State'] + "-" + df["Jail"]
+df = df[['Population', 'Scrape_Date', 'STATE-COUNTY']]
+
+# df.columns = ['Population', 'Scrape_Date', 'STATE-COUNTY']
 print(df.columns)
 print(df.head(2))
 orig_len = len(df)
@@ -67,7 +74,8 @@ jails_to_include = ndata_per_jail[ndata_per_jail>=threshold].index
 df = df[df['STATE-COUNTY'].isin(jails_to_include)] #Subset to jails with 75% data populated compared to max number records for single facility
 over_75percent_data = len(df)
 
-march10_facilities = df[df.Scrape_Date == "2020-03-10"]['STATE-COUNTY'].unique()
+march10_facilities = df[(df.Scrape_Date == "2020-03-10")
+                        & (~df.Population.isna())]['STATE-COUNTY'].unique()
 df = df[df['STATE-COUNTY'].isin(march10_facilities)] #Subset to jails with data for March 10th 2020
 
 
