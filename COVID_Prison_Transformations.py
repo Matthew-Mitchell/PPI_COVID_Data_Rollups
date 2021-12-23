@@ -118,7 +118,9 @@ df['Scrape_Date'] = df['Scrape_Date'].dt.date
 
 ## Update 12-23-21: Cache to Disk - Will be used to Merge New API DATA in. Afterwards, will load this data from disk and comment out above
 today = datetime.datetime.now().strftime('%m-%d-%Y') #Create string of today's date
-df.to_csv("RawData_03-10-21_to_10-07-21_Generated{}".format(today))
+filename = "RawData_03-10-21_to_10-07-21_Generated_{}.csv".format(today)
+print("Saving raw Jail Scrape Data to Disk: {}".format)filename
+df.to_csv(filename)
 
 #Load Data 03-10-21_to_10-07-21_Generated{}
 
@@ -178,8 +180,8 @@ final = pre_pivot.pivot(index="STATE-COUNTY", columns="Scrape_Date", values="Pop
 ## Save Transformed Output to Excel
 
 today = datetime.datetime.now().strftime('%m-%d-%Y') #Create string of today's date
-max_scrape_date = max([col for col in df.columns if re.match("\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}", str(col))])
-min_scrape_date = min([col for col in prior.columns if re.match("\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}", str(col))])
+max_scrape_date = max([col for col in final.columns if re.match("\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}", str(col))])
+min_scrape_date = min([col for col in final.columns if re.match("\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}", str(col))])
 
 filename = "Jail_Summaries_{}_to_{}_Generated_{}.xlsx".format(min_scrape_date, max_scrape_date, today)
 print('Saving to: {}'.format(filename))
