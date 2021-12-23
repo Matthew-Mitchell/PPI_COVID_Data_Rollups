@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import datetime
 import glob
 import numpy as np
+import re
+
 #Read in NYU Data
 # df = pd.read_csv('https://raw.githubusercontent.com/publicsafetylab/public-psl-jdi-pops/master/data.csv')
 def custom_sort(jdi):
@@ -93,7 +95,6 @@ message = "{} of {} jails ({}%) have over 75% data populated AND data for March 
 print(message.format(len(march10_facilities),len(ndata_per_jail), percentM10_AND_75))
 
 ## Jails with the last date needs to be within 3 months
-
 today = pd.to_datetime(datetime.datetime.now().strftime('%m-%d-%Y')) 
 three_months_ago = today - datetime.timedelta(days = 90)
 
@@ -113,6 +114,19 @@ df['Year'] = df.Scrape_Date.dt.strftime('%Y')
 df['DayOfWeek'] = df.Scrape_Date.dt.strftime('%A')
 #Convert Datetime to Strict Date
 df['Scrape_Date'] = df['Scrape_Date'].dt.date
+
+
+## Update 12-23-21: Cache to Disk - Will be used to Merge New API DATA in. Afterwards, will load this data from disk and comment out above
+today = datetime.datetime.now().strftime('%m-%d-%Y') #Create string of today's date
+df.to_csv("RawData_03-10-21_to_10-07-21_Generated{}".format(today))
+
+#Load Data 03-10-21_to_10-07-21_Generated{}
+
+#Load More Recent API DATA
+
+#Merge Datasets
+
+# Continuation of Previous Scripts
 
 ## Summarizing Daily Jail Populations
 ## This is the second tab of the saved worksheet.
