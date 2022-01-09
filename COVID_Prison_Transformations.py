@@ -95,12 +95,16 @@ message = "{} of {} jails ({}%) have over 75% data populated AND data for March 
 print(message.format(len(march10_facilities),len(ndata_per_jail), percentM10_AND_75))
 
 ## Jails with the last date needs to be within 3 months
-today = pd.to_datetime(datetime.datetime.now().strftime('%m-%d-%Y')) 
+# today = pd.to_datetime(datetime.datetime.now().strftime('%m-%d-%Y')) 
+#Jan-8-2022: Since no recent data, Setting Date to previous run time
+today = pd.to_datetime("10-08-2021") 
+
 three_months_ago = today - datetime.timedelta(days = 90)
 
 
 jails_most_recent = df.groupby('STATE-COUNTY')['Scrape_Date'].max()
 jails_to_include = jails_most_recent[jails_most_recent>=three_months_ago].index
+
 df = df[df['STATE-COUNTY'].isin(jails_to_include)] #Subset master dataset
 
 
