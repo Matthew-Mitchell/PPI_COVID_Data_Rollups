@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import datetime
 import glob
 import numpy as np
+import re
+
 #Read in NYU Data
 # df = pd.read_csv('https://raw.githubusercontent.com/publicsafetylab/public-psl-jdi-pops/master/data.csv')
 def custom_sort(jdi):
@@ -93,7 +95,6 @@ message = "{} of {} jails ({}%) have over 75% data populated AND data for March 
 print(message.format(len(march10_facilities),len(ndata_per_jail), percentM10_AND_75))
 
 ## Jails with the last date needs to be within 3 months
-
 today = pd.to_datetime(datetime.datetime.now().strftime('%m-%d-%Y')) 
 three_months_ago = today - datetime.timedelta(days = 90)
 
@@ -114,8 +115,23 @@ df['DayOfWeek'] = df.Scrape_Date.dt.strftime('%A')
 #Convert Datetime to Strict Date
 df['Scrape_Date'] = df['Scrape_Date'].dt.date
 
-## Summarizing Daily Jail Populations
 
+## Update 12-23-21: Cache to Disk - Will be used to Merge New API DATA in. Afterwards, will load this data from disk and comment out above
+today = datetime.datetime.now().strftime('%m-%d-%Y') #Create string of today's date
+filename = "RawData_03-10-21_to_10-07-21_Generated_{}.csv".format(today)
+print("Saving raw Jail Scrape Data to Disk: {}".format)filename
+df.to_csv(filename)
+
+#Load Data 03-10-21_to_10-07-21_Generated{}
+
+#Load More Recent API DATA
+
+#Merge Datasets
+
+# Continuation of Previous Scripts
+
+## Summarizing Daily Jail Populations
+## This is the second tab of the saved worksheet.
 jail_totals = df.groupby('Scrape_Date')['Population'].agg(['count', 'sum'])
 jail_totals.columns = ['Count_Of_Jails','Total_Jail_Population']
 jail_totals['Seven_Day_Rolling_Average'] = jail_totals['Total_Jail_Population'].rolling(7).mean()
@@ -164,8 +180,10 @@ final = pre_pivot.pivot(index="STATE-COUNTY", columns="Scrape_Date", values="Pop
 ## Save Transformed Output to Excel
 
 today = datetime.datetime.now().strftime('%m-%d-%Y') #Create string of today's date
+max_scrape_date = max([col for col in final.columns if re.match("\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}", str(col))])
+min_scrape_date = min([col for col in final.columns if re.match("\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}", str(col))])
 
-filename = "Jail_Summaries_as_of_{}.xlsx".format(today)
+filename = "Jail_Summaries_{}_to_{}_Generated_{}.xlsx".format(min_scrape_date, max_scrape_date, today)
 print('Saving to: {}'.format(filename))
 
 with pd.ExcelWriter(filename) as writer1:
@@ -176,6 +194,8 @@ with pd.ExcelWriter(filename) as writer1:
     for df, sheetname in to_save:
         df.to_excel(writer1, sheet_name = sheetname)
         worksheet = writer1.sheets[sheetname]  # pull worksheet object
+
+        #Update Sheet Formatting - ensures columns are expanded to width of longest element rathen than collapsed.
         for idx, col in enumerate(df):  # loop through all columns
             series = df[col]
             max_len = max((
