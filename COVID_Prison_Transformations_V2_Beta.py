@@ -135,6 +135,14 @@ def custom_sort(jdi):
 #Load Merged Dataset Through November
 df = pd.read_csv("Combined_Prior_to_Full_Script_Run_01-09-2022.csv")
 df['Scrape_Date'] = pd.to_datetime(df['Scrape_Date'])
+
+
+#Subset to original Jail List
+original = pd.read_csv("RawData_03-10-21_to_10-07-21_Generated_01-09-2022.csv")
+df = df[df['STATE-COUNTY'].isin(original['STATE-COUNTY'].unique())]
+
+assert df['STATE-COUNTY'].nunique() == 415, "Error there are no longer 415 Unique State County Jails in the dataset!"
+print("Unique State Counties: ", df['STATE-COUNTY'].nunique())
 # Continuation of Previous Scripts
 
 ## Summarizing Daily Jail Populations
