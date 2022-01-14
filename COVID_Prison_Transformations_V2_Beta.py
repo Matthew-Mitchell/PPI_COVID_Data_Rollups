@@ -143,6 +143,9 @@ df = df[df['STATE-COUNTY'].isin(original['STATE-COUNTY'].unique())]
 
 assert df['STATE-COUNTY'].nunique() == 415, "Error there are no longer 415 Unique State County Jails in the dataset!"
 print("Unique State Counties: ", df['STATE-COUNTY'].nunique())
+
+#Ensure Deduplicated
+df = df[~df.duplicated(subset=['Scrape_Date','STATE-COUNTY'])]
 # Continuation of Previous Scripts
 
 ## Summarizing Daily Jail Populations
