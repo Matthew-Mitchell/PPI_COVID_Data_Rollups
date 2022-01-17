@@ -12,6 +12,19 @@ def custom_sort(jdi):
     date = jdi.split("_")[-1].strip(".csv")
     date = pd.to_datetime(date)
     return date
+
+def find_closest_data2date(date, df):
+    marker_time = date
+    df['Distance2Time'] = df['Scrape_Date'] - marker_time
+    df['Distance2Time_ABS'] = df['Distance2Time'].apply(lambda x: (np.abs(x.days)))
+    temp = df.sort_values(by=['STATE-COUNTY','Distance2Time_ABS']).groupby(['STATE-COUNTY']).head(1)
+    temp = temp.set_index("STATE-COUNTY")[['Population','Scrape_Date']]
+    return temp
+
+def rename_snapshot(population_rename, date_rename, temp):
+    temp = temp.rename(columns = {"Population":population_rename,
+                                 "Scrape_Date":date_rename})
+    return temp
 # #Find all files of the form jdi_booking_stats_DATE.csv
 # jdi_files = glob.glob("jdi_booking_stats_*.csv")
 # jdi_files = sorted(jdi_files, key= custom_sort)
@@ -197,6 +210,44 @@ pre_pivot = pd.concat([march_10, first_mondays, most_recent, first_monday_summar
 pre_pivot = pre_pivot.drop_duplicates(subset=['STATE-COUNTY', 'Scrape_Date'])
 final = pre_pivot.pivot(index="STATE-COUNTY", columns="Scrape_Date", values="Population")
 
+#Adding Snapshot Views for Emily 1-17-22
+most_recent = df['Scrape_Date'].max()#pd.to_datetime("11-30-2021")
+mar_10 = pd.to_datetime("03-10-2020")
+may_1 = pd.to_datetime("05-01-2020")
+
+day_length = (most_recent - mar_10).days
+
+sections = 4
+
+q1 = pd.to_datetime((mar_10 + pd.Timedelta(days=day_length/sections)).date())
+q2 = pd.to_datetime((mar_10 + pd.Timedelta(days=(day_length/sections*2))).date())
+q3 = pd.to_datetime((mar_10 + pd.Timedelta(days=(day_length/sections*3))).date())
+
+dfs = []
+
+dates = [mar_10, q1, q2, q3, most_recent, may_1]
+renames = [("Mar 10th Population", "Mar 10th Date"),
+          ("Midpoint 1 Population", "Midpoint 1 Date"),
+          ("Midpoint 2 Population", "Midpoint 2 Date"),
+          ("Midpoint 3 Population", "Midpoint 3 Date"),
+          ("Most Recent Population", "Most Recent Date"),
+          ("May 1st 2020 Population", "May 1st 2020 Date")]
+for n, date in enumerate(dates):
+    temp = find_closest_data2date(date, df)
+    population_rename , date_rename = renames[n]
+    temp = rename_snapshot(population_rename , date_rename , temp)
+    dfs.append(temp)
+
+
+for n, temp in enumerate(dfs):
+    temp = temp.reset_index()
+    if n ==0 :
+        snapshot = temp
+    else:
+        snapshot = snapshot.merge(temp, how='left')
+print(snapshot.shape)
+snapshot = snapshot.set_index('STATE-COUNTY')
+#End Snapshot views
 
 ## Save Transformed Output to Excel
 
@@ -208,7 +259,7 @@ filename = "Jail_Summaries_{}_to_{}_Generated_{}.xlsx".format(min_scrape_date, m
 print('Saving to: {}'.format(filename))
 
 with pd.ExcelWriter(filename) as writer1:
-    to_save = [(final, 'FirstMondays'),(jail_totals, 'DailyJailTotals')]
+    to_save = [(final, 'FirstMondays'),(jail_totals, 'DailyJailTotals'), (snapshot, "SnapshotViews")]
     #final.to_excel(writer1, sheet_name = 'FirstMondays')
     #jail_totals.to_excel(writer1, sheet_name = 'DailyJailTotals')
     #Fix Column Widths
