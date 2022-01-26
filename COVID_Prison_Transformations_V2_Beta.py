@@ -146,7 +146,11 @@ def rename_snapshot(population_rename, date_rename, temp):
 #Merge Datasets
 
 #Load Merged Dataset Through November
-df = pd.read_csv("Combined_Prior_to_Full_Script_Run_01-09-2022.csv")
+# df = pd.read_csv("Combined_Prior_to_Full_Script_Run_01-09-2022.csv")
+
+#Update 1-26-2022 Load Population Aggregates Transformed file
+df = pd.read_csv("Transformed_RawData_From_PopulationAggregateAPIendpoint.csv")
+
 df['Scrape_Date'] = pd.to_datetime(df['Scrape_Date'])
 
 
