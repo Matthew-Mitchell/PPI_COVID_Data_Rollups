@@ -6,3 +6,7 @@ To update the script:
 
 Run script using the command: 
 ```python3 COVID_Prison_Transformations.py```
+
+Updated version is currently:
+
+```python3 COVID_Prison_Transformations_V2_Beta.py```
