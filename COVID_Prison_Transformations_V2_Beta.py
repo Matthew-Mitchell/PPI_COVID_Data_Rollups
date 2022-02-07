@@ -153,11 +153,17 @@ df = pd.read_csv("Transformed_RawData_From_PopulationAggregateAPIendpoint.csv")
 
 df['Scrape_Date'] = pd.to_datetime(df['Scrape_Date'])
 
-##************** Start ********* Subset to 12-31-21 For Emily Temp View 1-31-2022:#***********************
+##************** Start ********* Subset to End oif Last Month#***********************
+today = datetime.datetime.now()
+first = today.replace(day=1)
+lastMonth = first - datetime.timedelta(days=1)
+lastMonth = pd.to_datetime(lastMonth.strftime("%m-%d-%Y"))
+
 print(df['Scrape_Date'].min(), df['Scrape_Date'].max(), df['Scrape_Date'].nunique())
-df = df[df['Scrape_Date'] <= pd.to_datetime("12-31-2021")]
+# df = df[df['Scrape_Date'] <= pd.to_datetime("12-31-2021")]
+df = df[df['Scrape_Date'] <= lastMonth]
 print(df['Scrape_Date'].min(), df['Scrape_Date'].max(), df['Scrape_Date'].nunique())
-#************** END ********* Subset to 12-31-21 For Emily Temp View 1-31-2022:*********************
+#************** END *********  Subset to End oif Last Month *********************
 
 #Subset to original Jail List
 original = pd.read_csv("RawData_03-10-21_to_10-07-21_Generated_01-09-2022.csv")
