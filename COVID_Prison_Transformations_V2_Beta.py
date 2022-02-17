@@ -149,7 +149,23 @@ def rename_snapshot(population_rename, date_rename, temp):
 # df = pd.read_csv("Combined_Prior_to_Full_Script_Run_01-09-2022.csv")
 
 #Update 1-26-2022 Load Population Aggregates Transformed file
-df = pd.read_csv("Transformed_RawData_From_PopulationAggregateAPIendpoint.csv")
+# df = pd.read_csv("Transformed_RawData_From_PopulationAggregateAPIendpoint.csv")
+#Update 2-7-2022: Leverage Updated API endpoint.
+url = "https://psl-jdi-public.s3.amazonaws.com/population_aggregates.csv"
+df = pd.read_csv(url)
+
+df['STATE-COUNTY'] = df['State'] + "-" + df['Jail']
+
+cols2keep = ['State', 'Jail', 'Date', 'Population_Interpolated', 'STATE-COUNTY']
+df = df[cols2keep]
+df = df.rename(columns = {'Jail':'County',
+                         'Facility_Identifier' : 'STATE-COUNTY',
+                         'Population_Interpolated':'Population',
+                         'Date':'Scrape_Date'})
+df['Scrape_Date'] = pd.to_datetime(df['Scrape_Date'])
+df['Month'] = df['Scrape_Date'].dt.strftime("%m")
+df['Year'] = df['Scrape_Date'].dt.strftime("%Y")
+df['DayOfWeek'] = df['Scrape_Date'].dt.strftime("%A")
 
 df['Scrape_Date'] = pd.to_datetime(df['Scrape_Date'])
 
@@ -270,6 +286,8 @@ today = datetime.datetime.now().strftime('%m-%d-%Y') #Create string of today's d
 max_scrape_date = max([col for col in final.columns if re.match("\d{4}-\d{2}-\d{2}", str(col))])
 min_scrape_date = min([col for col in final.columns if re.match("\d{4}-\d{2}-\d{2}", str(col))])
 
+max_scrape_date = pd.to_datetime(max_scrape_date).strftime("%m-%d-%Y")
+min_scrape_date = pd.to_datetime(min_scrape_date).strftime("%m-%d-%Y")
 filename = "Jail_Summaries_{}_to_{}_Generated_{}.xlsx".format(min_scrape_date, max_scrape_date, today)
 print('Saving to: {}'.format(filename))
 
